@@ -28,7 +28,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class MainActivity extends Activity {
-
+	
+	//Initial Declarations/initialization
 	TextView company;
 	TextView price;
 	EditText symbol;
@@ -39,12 +40,8 @@ public class MainActivity extends Activity {
 	double stockPrice;
 	URL url = null;
 
-	JSONObject jsonMain;
-	JSONArray stockArray;
-
 	Message msg;
-	String jsonString = "";
-	String tmpJSON = "";
+	
 
 
 	@Override
@@ -68,28 +65,31 @@ public class MainActivity extends Activity {
 
 						try {
 							String urlJSON = "";
+							String jsonString = "";
+							String tmpJSON = "";
 
 							stockCompany = symbol.getText().toString();
 							urlJSON = URL + stockCompany + urlEnd;
 							Log.i("URL: ", urlJSON.toString());
 							
+							//Read in JSON String
 							url = new URL(urlJSON);
 							BufferedReader br = new BufferedReader(
 									new InputStreamReader(url.openStream()));
-							
+
 							StringBuilder stringBuilder = new StringBuilder();
-							
+
 							while((tmpJSON = br.readLine()) != null) {
 								stringBuilder.append(tmpJSON + "\n");
 							}
-							
+
 							jsonString = stringBuilder.toString();
-							
+
 							Log.i("JSON STRING: ", jsonString);
 							msg = Message.obtain();
 							msg.obj = jsonString;
 
-							displayURL.sendMessage(msg);
+							getJSONString.sendMessage(msg);
 
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
@@ -113,31 +113,39 @@ public class MainActivity extends Activity {
 		}
 	}
 
-	Handler displayURL = new Handler(new Handler.Callback() {
+	Handler getJSONString = new Handler(new Handler.Callback() {
 
 		@Override
 		public boolean handleMessage(Message msg) {
 			try {
+				JSONObject jsonMain;
+				JSONArray resourcesArray;
+				JSONObject jsonList;
+				JSONObject jsonArray;
+				JSONObject jsonResource;
+				JSONObject jsonAttribute;
+
+				//Each getJSONObject goes deeper into the json string hierarchy
 				jsonMain = new JSONObject(msg.obj.toString());
+					jsonList = jsonMain.getJSONObject("list");
+						resourcesArray = jsonList.getJSONArray("resources");
+						jsonArray = resourcesArray.getJSONObject(0);
+							jsonResource = jsonArray.getJSONObject("resource");
+								jsonAttribute = jsonResource.getJSONObject("fields");
+								stockCompany = jsonAttribute.getString("name");
+								stockPrice = jsonAttribute.getDouble("price");
+
+				//Testing and Debugging purposes
 				Log.i("JSON Obj1: ", jsonMain.toString());
-				JSONObject obj2 = jsonMain.getJSONObject("list");
-				Log.i("JSON Obj2: ", obj2.toString());
-				stockArray = obj2.getJSONArray("resources");
-				Log.i("JSON Obj2 Array: ", stockArray.toString());
-				JSONObject obj3 = stockArray.getJSONObject(0);
-				Log.i("JSON Obj3: ", obj3.toString());
-				JSONObject obj4 = obj3.getJSONObject("resource");
-				Log.i("JSON Obj4: ", obj4.toString());
-				JSONObject obj5 = obj4.getJSONObject("fields");
-				Log.i("JSON Obj5: ", obj5.toString());
-				stockCompany = obj5.getString("name");
+				Log.i("JSON Obj2: ", jsonList.toString());
+				Log.i("JSON Obj2 Array: ", resourcesArray.toString());
+				Log.i("JSON Obj3: ", jsonArray.toString());
+				Log.i("JSON Obj4: ", jsonResource.toString());
+				Log.i("JSON Obj5: ", jsonAttribute.toString());
 				Log.i("JSON symbol: ", stockCompany);
-				stockPrice = obj5.getDouble("price");
 				Log.i("JSON stockprice: ", String.valueOf(stockPrice));
 
-				Log.i("Stock Symbol: ", stockCompany);
-				Log.i("Stock Price: ", String.valueOf(stockPrice));
-
+				// Set textviews to the Results
 				price.setText(String.valueOf(stockPrice));
 				company.setText(stockCompany);
 
@@ -147,7 +155,7 @@ public class MainActivity extends Activity {
 			}
 
 			return false;
-		}
-	});
-}
+		}//end handleMessage
+	});//end of Handler getJSONString
+}//end of 
 

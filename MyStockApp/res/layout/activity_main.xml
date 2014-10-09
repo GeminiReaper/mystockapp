@@ -4,13 +4,31 @@
     android:layout_height="match_parent"
     tools:context="${relativePackage}.${activityClass}" >
 
+    <Button
+        android:id="@+id/search"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/stockSymbol"
+        android:layout_alignBottom="@+id/stockSymbol"
+        android:layout_toRightOf="@+id/stockPrice"
+        android:text="Search" />
+
+    <EditText
+        android:id="@+id/stockSymbol"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="86dp"
+        android:layout_toLeftOf="@+id/search"
+        android:ems="10" />
+
     <TextView
         android:id="@+id/stockPrice"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_centerVertical="true"
-        android:layout_marginRight="22dp"
+        android:layout_below="@+id/company"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp"
         android:text="Stock price"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
@@ -18,29 +36,9 @@
         android:id="@+id/company"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
         android:layout_centerVertical="true"
+        android:layout_toLeftOf="@+id/search"
         android:text="Company Name"
         android:textAppearance="?android:attr/textAppearanceLarge" />
-
-    <EditText
-        android:id="@+id/stockSymbol"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/stockPrice"
-        android:layout_marginBottom="48dp"
-        android:ems="10" >
-
-        <requestFocus />
-    </EditText>
-
-    <Button
-        android:id="@+id/search"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/stockSymbol"
-        android:layout_alignBottom="@+id/stockSymbol"
-        android:layout_alignRight="@+id/stockPrice"
-        android:text="Search" />
 
 </RelativeLayout>
