@@ -1,6 +1,7 @@
 package com.example.mystockapp;
 
 import android.app.Activity;
+import android.app.Service;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -28,7 +29,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class MainActivity extends Activity {
-	
+
 	//Initial Declarations/initialization
 	TextView company;
 	TextView price;
@@ -37,11 +38,17 @@ public class MainActivity extends Activity {
 	String URL = "http://finance.yahoo.com/webservice/v1/symbols/";
 	String urlEnd = "/quote?format=json";
 	String stockCompany;
-	double stockPrice;
 	URL url = null;
+	
+	double stockPrice;
+	private static String compareSymbol = "";
+	int refreshCount;
+	boolean keepUpdating;
+
+	Handler autoRefresh = new Handler();
 
 	Message msg;
-	
+
 
 
 	@Override
@@ -54,47 +61,33 @@ public class MainActivity extends Activity {
 		symbol = (EditText) findViewById(R.id.stockSymbol);
 		search = (Button) findViewById(R.id.search);
 
+
+
 		search.setOnClickListener(new View.OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
-
+				compareSymbol = symbol.getText().toString();
+				keepUpdating = true;
+				
 				Thread loadContent = new Thread() {
 					@Override
 					public void run(){
-
-						try {
-							String urlJSON = "";
-							String jsonString = "";
-							String tmpJSON = "";
-
-							stockCompany = symbol.getText().toString();
-							urlJSON = URL + stockCompany + urlEnd;
-							Log.i("URL: ", urlJSON.toString());
-							
-							//Read in JSON String
-							url = new URL(urlJSON);
-							BufferedReader br = new BufferedReader(
-									new InputStreamReader(url.openStream()));
-
-							StringBuilder stringBuilder = new StringBuilder();
-
-							while((tmpJSON = br.readLine()) != null) {
-								stringBuilder.append(tmpJSON + "\n");
+						refreshCount = 0;
+						
+						
+						while(keepUpdating) {
+							try {
+								if(refreshCount > 0) {
+									Thread.sleep(10000);
+								}
+								displayData();
+							} catch (Exception e) {
+								e.printStackTrace();
 							}
-
-							jsonString = stringBuilder.toString();
-
-							Log.i("JSON STRING: ", jsonString);
-							msg = Message.obtain();
-							msg.obj = jsonString;
-
-							getJSONString.sendMessage(msg);
-
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
 						}
+						
+						refreshCount++;
 					}//end run
 				}; //end thread
 				loadContent.start();
@@ -102,6 +95,22 @@ public class MainActivity extends Activity {
 			}
 		}); //end search OnclickListener
 	}//end oncreate
+
+//	private Runnable updater = new Runnable() {
+//
+//		public void run() {
+//			if(symbol.getText().toString() == compareSymbol) {
+//				autoRefresh.postDelayed(updater, 10000);
+//				Log.i("Refreshed data after 10 seconds", "10");
+//				displayData();
+//			}
+//			else {
+//				
+//			}
+//
+//		}
+//
+//	};
 
 	public boolean isNetworkActive(){
 		ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -127,13 +136,13 @@ public class MainActivity extends Activity {
 
 				//Each getJSONObject goes deeper into the json string hierarchy
 				jsonMain = new JSONObject(msg.obj.toString());
-					jsonList = jsonMain.getJSONObject("list");
-						resourcesArray = jsonList.getJSONArray("resources");
-						jsonArray = resourcesArray.getJSONObject(0);
-							jsonResource = jsonArray.getJSONObject("resource");
-								jsonAttribute = jsonResource.getJSONObject("fields");
-								stockCompany = jsonAttribute.getString("name");
-								stockPrice = jsonAttribute.getDouble("price");
+				jsonList = jsonMain.getJSONObject("list");
+				resourcesArray = jsonList.getJSONArray("resources");
+				jsonArray = resourcesArray.getJSONObject(0);
+				jsonResource = jsonArray.getJSONObject("resource");
+				jsonAttribute = jsonResource.getJSONObject("fields");
+				stockCompany = jsonAttribute.getString("name");
+				stockPrice = jsonAttribute.getDouble("price");
 
 				//Testing and Debugging purposes
 				Log.i("JSON Obj1: ", jsonMain.toString());
@@ -157,5 +166,44 @@ public class MainActivity extends Activity {
 			return false;
 		}//end handleMessage
 	});//end of Handler getJSONString
-}//end of 
+
+	public void displayData() { 
+
+		try {
+			String urlJSON = "";
+			String jsonString = "";
+			String tmpJSON = "";
+
+			stockCompany = symbol.getText().toString();
+			urlJSON = URL + stockCompany + urlEnd;
+			Log.i("URL: ", urlJSON.toString());
+
+			//Read in JSON String
+			url = new URL(urlJSON);
+			BufferedReader br = new BufferedReader(
+					new InputStreamReader(url.openStream()));
+
+			StringBuilder stringBuilder = new StringBuilder();
+
+			while((tmpJSON = br.readLine()) != null) {
+				stringBuilder.append(tmpJSON + "\n");
+			}
+
+			jsonString = stringBuilder.toString();
+
+			Log.i("JSON STRING: ", jsonString);
+			msg = Message.obtain();
+			msg.obj = jsonString;
+
+			getJSONString.sendMessage(msg);
+
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}//end of 
+	
+}
 
